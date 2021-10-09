@@ -1,2 +1,4 @@
 from functions import RunBot
-RunBot()
+
+while(True):
+  RunBot()
