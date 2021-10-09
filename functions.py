@@ -1,8 +1,12 @@
-from time import sleep
+from datetime import datetime
 from praw import Reddit
 from os import environ
 from random import randint
-from datetime import datetime
+
+def MinutesBetweenTimes(then, now):
+  duration = now - then
+  duration_in_s = duration.total_seconds()
+  return divmod(duration_in_s, 60)[0]
 
 def InitPraw():
   return Reddit(
@@ -73,7 +77,7 @@ def CheckNewPosts(posts):
           if not AlreadyReplied(comment.replies):
             quote_replied = ReplyRandomQuote(comment)
             StoreReply(comment, quote_replied)
-            sleep(600)
+            last_comment_time = datetime.now()  
 
 
 def RunBot():
