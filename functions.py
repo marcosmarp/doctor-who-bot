@@ -2,6 +2,8 @@ from datetime import datetime
 from praw import Reddit
 from os import environ
 from random import randint
+import pytz
+from sys import stderr
 
 def MinutesBetweenTimes(then, now):
   duration = now - then
@@ -68,6 +70,11 @@ def StoreReply(comment, reply):
     file_object.write("   Replied quote: " + reply)
     file_object.write("\n")
 
+def InformReplyOnScreen(comment, reply):
+  now = datetime.now(pytz.timezone('America/Argentina/Buenos_Aires'))
+  dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+  print(dt_string + ": replied " + comment.author.name + "'s comment with: ", file=stderr)
+  print("   " + reply, file=stderr)
 
 def CheckNewPosts(posts):
   for post in posts:
@@ -76,11 +83,10 @@ def CheckNewPosts(posts):
         if "doctor" in comment.body.lower():
           if not AlreadyReplied(comment.replies):
             quote_replied = ReplyRandomQuote(comment)
+            InformReplyOnScreen(comment, quote_replied)
             StoreReply(comment, quote_replied)
             last_comment_time = datetime.now()  
 
 
-def RunBot():
-  reddit_handler = InitPraw()
-  doctor_who_subreddit_handler = reddit_handler.subreddit("doctorwho")
-  CheckNewPosts(doctor_who_subreddit_handler.new(limit=25))
+def RunBot(subreddit_handler):
+  CheckNewPosts(subreddit_handler.new(limit=25))
