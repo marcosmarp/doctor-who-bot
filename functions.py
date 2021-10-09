@@ -45,11 +45,11 @@ def ReplyRandomQuote(comment):
 
 def StoreReply(comment, reply):
   amount_of_lines = 0
-  with open("replies.txt", "r") as file_object:
+  with open("replies.txt", "r", encoding='utf-8') as file_object:
     for line in file_object:
       amount_of_lines += 1
     file_object.close()
-  with open("replies.txt", "a") as file_object:
+  with open("replies.txt", "a", encoding='utf-8') as file_object:
     file_object.write("Reply #" + str(int(amount_of_lines/11 + 1)))
     file_object.write("\n")
     file_object.write(" Replied comment data:")
