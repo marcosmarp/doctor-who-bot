@@ -1,14 +1,10 @@
 from datetime import datetime
+from time import sleep
 from praw import Reddit
 from os import environ
 from random import randint
 import pytz
 from sys import stderr
-
-def MinutesBetweenTimes(then, now):
-  duration = now - then
-  duration_in_s = duration.total_seconds()
-  return divmod(duration_in_s, 60)[0]
 
 def InitPraw():
   return Reddit(
@@ -86,8 +82,8 @@ def CheckNewPosts(posts):
             quote_replied = ReplyRandomQuote(comment)
             InformReplyOnScreen(comment, quote_replied)
             StoreReply(comment, quote_replied)
-            last_comment_time = datetime.now()  
+            sleep(600)
 
 
 def RunBot(subreddit_handler):
-  CheckNewPosts(subreddit_handler.new(limit=25))
+ CheckNewPosts(subreddit_handler.new(limit=25))
