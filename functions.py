@@ -21,7 +21,7 @@ def InitPraw():
 
 def LoadQuotes():
   quotes = []
-  file = open('quotes.txt', 'r')
+  file = open('quotes.txt', 'r', encoding='utf-8')
   for line in file:
     quotes.append(line)
   file.close()
