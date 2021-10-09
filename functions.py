@@ -81,11 +81,10 @@ def CheckNewPosts(posts):
           if not AlreadyReplied(comment.replies):
             quote_replied = ReplyRandomQuote(comment)
             StoreReply(comment, quote_replied)
-            #sleep(300)
+            sleep(300)
 
 
 def RunBot():
   reddit_handler = InitPraw()
   doctor_who_subreddit_handler = reddit_handler.subreddit("doctorwho")
   CheckNewPosts(doctor_who_subreddit_handler.new(limit=25))
-
