@@ -81,7 +81,7 @@ def CheckNewPosts(posts):
           if not AlreadyReplied(comment.replies):
             quote_replied = ReplyRandomQuote(comment)
             StoreReply(comment, quote_replied)
-            sleep(300)
+            sleep(600)
 
 
 def RunBot():
