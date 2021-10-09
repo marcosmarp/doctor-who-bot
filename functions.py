@@ -39,7 +39,8 @@ def GetRandomPositionOfObject(object):
 def ReplyRandomQuote(comment):
   quotes = LoadQuotes()
   random_quote_position = GetRandomPositionOfObject(quotes)
-  comment.reply(quotes[random_quote_position])
+  reply = quotes[random_quote_position] + "\n" + "^(I'm a bot and this action was performed automatically)" + "\n" + "\n" + "^(Feedback? Bugs? )[^(Contact the developer)](mailto:marcosmartinezpalermo@gmail.com)" + "\n" + "\n" "[^(Github)](https://github.com/marcosmarp/doctor-who-bot)"
+  comment.reply(reply)
   return quotes[random_quote_position]
 
 def StoreReply(comment, reply):
