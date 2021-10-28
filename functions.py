@@ -2,88 +2,111 @@ from datetime import datetime
 from time import sleep
 from praw import Reddit
 from os import environ
-from random import randint
+import random
 import pytz
 from sys import stderr
 
-def InitPraw():
+commands = ['!doctor']
+
+def log_error(message):
+  print(message, file=stderr)
+  print("---------------", file=stderr)
+
+def init_praw():
   return Reddit(
     client_id = environ['CLIENT_ID'],
     client_secret = environ['CLIENT_SECRET'],
-    user_agent="console:doctor-who-bot:v1.0.0 (by u/doctor-who-bot)",
+    user_agent="console:doctor-who-bot:v1.0.1 (by u/doctor-who-bot)",
     username = "doctor-who-bot",
     password = environ['PASSWORD']
   )
 
-def LoadQuotes():
-  quotes = []
-  file = open('quotes.txt', 'r', encoding='utf-8')
-  for line in file:
-    quotes.append(line)
-  file.close()
+def post_have_comments(post):
+  return (post.num_comments > 0)
+
+def load_quotes():
+  with open('quotes.txt', 'r', encoding='utf-8') as file:
+    quotes = list(file)
+
   return quotes
 
-def AlreadyReplied(replies):
-  for reply in replies:
-    if reply.author == "doctor-who-bot":
+def already_replied(replies):
+    return any(reply.author == "doctor-who-bot" for reply in replies)
+
+def reply_random_quote(comment):
+  reply = """
+  {0}
+
+  ^(I'm a bot and this action was performed automatically)
+  
+  ^(Feedback? Bugs?: )[^(Github)](https://github.com/marcosmarp/doctor-who-bot)
+  """
+  reply = reply.format(random.choice(load_quotes()))
+  comment.reply(reply)
+
+def inform_reply_on_screen(comment):
+  now = datetime.now(pytz.timezone('America/Argentina/Buenos_Aires'))
+  dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+  print("           " + dt_string + ": replied " + comment.author.name + "'s comment", file=stderr)
+  print("---------------", file=stderr)
+
+def check_for_command(comment):
+  for command in commands:
+    if command in comment.body.lower():
       return True
   return False
 
-def GetRandomPositionOfObject(object):
-  return randint(0, len(object)-1)
+def get_command(comment):
+  for command in commands:
+    if command in comment.body.lower():
+      return command
 
-def ReplyRandomQuote(comment):
-  quotes = LoadQuotes()
-  random_quote_position = GetRandomPositionOfObject(quotes)
-  reply = quotes[random_quote_position] + "\n" + "^(I'm a bot and this action was performed automatically)" + "\n" + "\n" + "^(Feedback? Bugs? )[^(Contact the developer)](mailto:marcosmartinezpalermo@gmail.com)" + "\n" + "\n" "[^(Github)](https://github.com/marcosmarp/doctor-who-bot)"
-  comment.reply(reply)
-  return quotes[random_quote_position]
+def check_comments(comments):
+  for comment in comments:
+      if hasattr(comment, "replies"):
+        check_comments(comment.replies)
 
-def StoreReply(comment, reply):
-  amount_of_lines = 0
-  with open("replies.txt", "r", encoding='utf-8') as file_object:
-    for line in file_object:
-      amount_of_lines += 1
-    file_object.close()
-  with open("replies.txt", "a", encoding='utf-8') as file_object:
-    file_object.write("Reply #" + str(int(amount_of_lines/11 + 1)))
-    file_object.write("\n")
-    file_object.write(" Replied comment data:")
-    file_object.write("\n")
-    file_object.write("   Author: " + comment.author.name)
-    file_object.write("\n")
-    file_object.write("   Link: https://www.reddit.com" + comment.permalink)
-    file_object.write("\n")
-    file_object.write("   Post:")
-    file_object.write("\n")
-    file_object.write("     Title: " + comment.submission.title)
-    file_object.write("\n")
-    file_object.write("     Author: " + comment.submission.author.name)
-    file_object.write("\n")
-    file_object.write("     Link: https://www.reddit.com" + comment.submission.permalink)
-    file_object.write("\n")
-    file_object.write(" Reply data:")
-    file_object.write("\n")
-    file_object.write("   Replied quote: " + reply)
-    file_object.write("\n")
+      if not hasattr(comment, "body"):
+        log_error("Empty comment")
+        continue
+      print("   Comment have body", file=stderr)
 
-def InformReplyOnScreen(comment, reply):
-  now = datetime.now(pytz.timezone('America/Argentina/Buenos_Aires'))
-  dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-  print(dt_string + ": replied " + comment.author.name + "'s comment with: ", file=stderr)
-  print("   " + reply, file=stderr)
+      if comment.author is None:
+        log_error("Comment deleted")
+        continue
+      print("   Checking " + comment.author.name + "'s comment", file=stderr)
 
-def CheckNewPosts(posts):
+      if not check_for_command(comment):
+        log_error("Comment doesn't mention a command'")
+        continue
+      command = get_command(comment)
+      print("       Comment mentions " + command, file=stderr)
+
+      if already_replied(comment.replies):
+        log_error("Comment already replied")
+        continue
+      print("         Comment yet to be replied", file=stderr)
+
+      reply_random_quote(comment)
+      inform_reply_on_screen(comment)
+
+      continue
+
+def check_new_posts(posts):
   for post in posts:
-    for comment in post.comments:
-      if hasattr(comment, "body"):
-        if "doctor" in comment.body.lower():
-          if not AlreadyReplied(comment.replies):
-            quote_replied = ReplyRandomQuote(comment)
-            InformReplyOnScreen(comment, quote_replied)
-            StoreReply(comment, quote_replied)
-            sleep(600)
+    if post.author is None:
+      log_error("Post deleted")
+      continue
+    print("Checking " + post.author.name + "'s '" + post.title + "' post", file=stderr)
+
+    if not post_have_comments(post):
+      log_error("Post doesn't have comments")
+      continue
+    print(" Post have comments", file=stderr)
+
+    check_comments(post.comments)
 
 
-def RunBot(subreddit_handler):
- CheckNewPosts(subreddit_handler.new(limit=25))
+def run_bot(subreddit_handler):
+ check_new_posts(subreddit_handler.new(limit=25))
+ sleep(30)

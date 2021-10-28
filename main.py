@@ -1,7 +1,15 @@
-from functions import RunBot, InitPraw
+from functions import run_bot, init_praw, log_error
+from traceback import print_exc
 
-reddit_handler = InitPraw()
-doctor_who_subreddit_handler = reddit_handler.subreddit("doctorwho")
+reddit_handler = init_praw()
+doctor_who_subreddit = reddit_handler.subreddit("doctorwho")
+test_subreddit = reddit_handler.subreddit("doctorwhoredditbot")
 
 while(True):
-  last_comment_time = RunBot(doctor_who_subreddit_handler)
+  try:
+    run_bot(test_subreddit)
+  except KeyboardInterrupt: # For quitting with ctrl+C
+    break
+  except:
+    log_error("Reddit exception: ")
+    print_exc()
