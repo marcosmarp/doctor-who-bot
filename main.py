@@ -7,7 +7,7 @@ test_subreddit = reddit_handler.subreddit("doctorwhoredditbot")
 
 while(True):
   try:
-    run_bot(test_subreddit)
+    run_bot(doctor_who_subreddit)
   except KeyboardInterrupt: # For quitting with ctrl+C
     break
   except:
